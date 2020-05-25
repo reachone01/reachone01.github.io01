@@ -1,0 +1,36 @@
+#Web_Main_Footer .box_footer {padding-left:0px;padding-top:0px;padding-right:0px;padding-bottom:0px;}
+ #Web_Main_Footer {background-color:#cecece;}
+ #Web_Main_Footer {background-image:url(//koss.iyong.com/swift/v1/iyong_public/iyong_2632980275085824/image/20180718/1531881124357059368.jpg);}
+ #Web_Main_Footer {background-repeat:no-repeat;background-position:top;}
+ #Web_Main_Footer .copyrightStyle {background-color:#3e3e3e;}
+ #Web_Main_Footer .copyrightStyle {background-repeat:repeat;background-position:center;}
+ .box_footer .copyrightStyle .box_web_main {padding-top:8px;padding-bottom:8px;}
+ #Web_Main_Footer .sectionheight{margin-left:0px;margin-top:25px;margin-right:0px;margin-bottom:25px;}
+ #Web_Main_Footer .box_web_main .copyNav_li > a{font-size:15px;}
+ #Web_Main_Footer .box_web_main .copyNav_li > a{font-weight:bold;}
+ #Web_Main_Footer .box_web_main .copyNav_li > a{line-height:2;}
+ #Web_Main_Footer .menuStyle .box_web_main > div{text-align:left;}
+ #Web_Main_Footer .box_web_main .copyNav_li > a{color:#000000;}
+ #Web_Main_Footer .box_web_main .copyNav_li > a:hover{color:#cb242d;}
+ #Web_Main_Footer .box_web_main .copyNav_li{width:140px;}
+ #Web_Main_Footer .box_web_main .copyNav_li ul > li > a{font-size:12px;}
+ #Web_Main_Footer .box_web_main .copyNav_li ul > li > a{line-height:2;}
+ #Web_Main_Footer .box_web_main .copyNav_li ul > li > a{color:#666666;}
+ #Web_Main_Footer .box_web_main .copyNav_li ul > li > a:hover{color:#cb242d;}
+ #Web_Main_Footer .box_web_main .sectionheight{min-height:212px;}
+ #Web_Main_Head {min-height:108px;}
+ #Web_Main_Head {background-color:#fff;}
+ #Web_Main_Head {background-image:url(//koss.iyong.com/swift/v1/iyong_public/iyong_2632980275085824/image/20180718/1531881603606046358.jpg);}
+ #Web_Main_Head {background-repeat:repeat-x;background-position:top;}
+ #Web_Main_Head {background-attachment:scroll;}
+ .design_main {font-size:14px;}
+ .design_main {line-height:2;}
+ .design_main {color:#333333;}
+ #design_edu_main {background-color:#f8f8f8;}
+ #design_edu_main {background-repeat:repeat;background-position:center;}
+ #design_edu_main {background-attachment:scroll;}
+ #Web_Main_Footer .box_web_main {font-size:14px;}
+ #Web_Main_Footer .box_web_main {line-height:2;}
+ #Web_Main_Footer .box_web_main {color:#fff;}
+ .design_main a{color:#555555;}
+ .design_main a:hover{color:#bf2222;}
