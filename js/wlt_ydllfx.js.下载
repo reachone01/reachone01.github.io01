@@ -1,0 +1,383 @@
+//获取页面传来的参数
+var scriptArgs = document.getElementById('kimScript').getAttribute('data');
+			var kacct ;
+			//var xml_path ="http://kim.yf461.kenfor.com";
+			//var xml_path = "http://www.im2006.com";
+			var xml_path = "http://kim.kenfor.com";
+			var kDoc=document;
+			var	this_title = kDoc.title;
+			var	this_url = location.href;
+			var	this_referr = kDoc.referrer;
+			var interface_lan ;
+			var client_id;
+			//var __charset;
+			var imp_val = scriptArgs.split(",");
+			for(var cs = 0;cs < imp_val.length;cs++){
+				//获取网聆通用户的账户信息等；
+					if(imp_val[cs].split("=")[0]=="wlt_account_id"){
+						kacct=imp_val[cs].split("=")[1];
+					}else if(imp_val[cs].split("=")[0]=="wlt_ln"){
+						interface_lan=imp_val[cs].split("=")[1];
+					}
+				}
+			//var visiter;
+			if(this_url.indexOf('asker=kim') >-1){this_referr='%E7%BD%91%E8%81%86%E9%80%9A';}
+			function validataNumber(str){
+				if(str.length == 0)	return false;
+				var patn = /^[0-9-\/]+$/;
+				if(!patn.test(str)) return false;
+				return true;
+			}
+			
+			function new_init(){
+				client_id = rC("my_client_id_"+kacct);
+				if(!validataNumber(client_id) || client_id=='undefined' || client_id==null || client_id.length<=0){
+				}else{
+					p_Klogin(client_id);
+				}
+				if(this_url.indexOf("zyjidian.com") == -1 ){
+					_do_save_track();
+				}
+			}
+			
+			function p_Klogin(id){
+				client_id = id;
+				login_status = 1;
+				if(login_status>0 && client_id.length>0){
+					wC("my_client_id_"+kacct, client_id, 24*30*12);
+				}
+			}
+			
+			function wC(name, value, hours) {
+			  var expire = "";
+			  if(hours != null){
+				expire = new Date((new Date()).getTime() + hours * 3600000);
+				expire = "; expires=" + expire.toGMTString();
+			  }
+			  kDoc.cookie = name + "=" + escape(value) + expire;
+			}
+			
+			function rC(name) {
+			  var cookieValue = "";
+			  var search = name + "=";
+			  if(kDoc.cookie.length > 0) {
+				offset = kDoc.cookie.indexOf(search);
+				if (offset != -1) {
+				  offset += search.length;
+				  end = kDoc.cookie.indexOf(";", offset);
+				  if (end == -1) end = kDoc.cookie.length;
+				  cookieValue = unescape(kDoc.cookie.substring(offset, end))
+				}
+			  }
+			  return cookieValue;
+			}
+
+			function getOS(){
+				var strResult ;
+				var appVersion = navigator.appVersion;
+				if(navigator.userAgent.match(/(Firefox)/)){
+					appVersion = navigator.oscpu;
+				}
+				var strPara = appVersion.match(/Windows NT\s[\d]+(\.[\d])/);
+                if(strPara && strPara.length> 0){
+					switch (strPara[0]){
+					 case "Windows NT 5.1":
+					  strResult = "Windows XP";
+					  break;
+					 case "Windows NT 5.2":
+					  strResult = "Windows Server 2003";
+					  break;
+					 case "Windows NT 6.0":
+					  strResult = "Windows Vista";
+					  break;
+					 case "Windows NT 6.1":
+					  strResult = "Windows 7";
+					  break;
+					 case "Windows NT 6.2":
+					  strResult = "Windows 8";
+					  break; 
+					 case "Windows NT 6.3":
+					  strResult = "Windows 8.1";
+					  break; 
+					 case "Windows NT 6.4":
+					  strResult = "Windows 10 Technical Preview (v.6.4.9841) ";
+					  break;
+					 case "Windows NT 10.0":
+					  strResult = "Windows 10";
+					  break; 
+					 default:
+					  strResult = "unknow";
+					  break;
+					}
+				}else{
+						strPara = appVersion.match(/Mac\sOS\sX\s\w*/);
+		                if(strPara && strPara.length> 0){
+							strResult=strPara[0].replace(new RegExp(/(_)/g),'.');
+						}else{
+							strPara = appVersion.match(/Android.\d.\d/);
+							if(strPara && strPara.length> 0){
+								strResult=strPara[0].replace(/\//,' ');
+							}else{
+								strPara = appVersion.match(/iPhone\sOS\s\w{3}/);
+		               	 		if(strPara && strPara.length> 0){
+									strResult=strPara[0].replace(new RegExp(/(_)/g),'.');
+								}else{
+									strPara = appVersion.match(/Windows\sPhone\s\d.\d/);
+		               	 			if(strPara && strPara.length> 0){
+										strResult=strPara;
+									}else{
+										strPara = appVersion.match(/Linux/);
+		               	 				if(strPara && strPara.length> 0){
+											strResult=strPara;
+										}else{
+											strPara = appVersion.match(/iPad/);
+		               	 					if(strPara && strPara.length> 0){
+		               	 						var iosVersion = appVersion.match(/OS\s\w{3}/)[0].replace(new RegExp(/(_)/g),'.');
+												strResult=strPara+" "+iosVersion;
+											}else{
+												strResult="unknow"
+											}
+										}
+									}
+								}
+							}
+						}
+				}
+				return strResult;
+			}
+
+			function getBrowser(){
+				var  browserName=navigator.appName;
+				var  browserVersion=parseInt(navigator.appVersion);
+				var os = getOS();
+				var browser='';
+		        var ua = navigator.userAgent.toLowerCase();		
+		        var s;
+		        if(os.indexOf("Android")>-1){
+		        	if (s = ua.match(/firefox\/([\d]+)/)) { browser = 'Firefox'+ s[1]; }
+		        	else if (s = ua.match(/chrome\/([\d]+)/)) { browser = 'Chrome'+ s[1]; }
+		        	else if (s = ua.match(/opera.([\d]+)/)) {  browser = 'Opera'+ s[1] ;}
+		        	else if(s= ua.match(/sogoumobilebrowser/)){ browser = 'Sougou' ;}
+		        	else if(s= ua.match(/360browser/)){ browser = '360' ;}
+		        	else if(s= ua.match(/ucbrowser/)){ browser = 'Uc' ;}
+		        	else if(s= ua.match(/micromessenger/)){ browser = 'WeiXin' ;}
+		        	else if(s= ua.match(/yixin/)){ browser = 'YiXin' ;}
+		        	else if(s= ua.match(/weibo/)){ browser = 'XinLang' ;}
+		        	else if(s= ua.match(/baiduboxapp/)){ browser = 'BaiDuApp' ;}
+		        	else if(s= ua.match(/webkit/)){ browser = 'WebKit' ;}
+		        	else{browser = "unknow";}
+		        	return browser;
+		        }
+		        if(os.indexOf("iPhone")>-1 || os.indexOf("iPad")>-1){
+		        	if (s = ua.match(/firefox\/([\d]+)/)) { browser = 'Firefox'+ s[1]; }
+		        	else if (s = ua.match(/chrome\/([\d]+)/)) { browser = 'Chrome'+ s[1]; }
+		       		else if (s = ua.match(/opera.([\d]+)/)) {  browser = 'Opera'+ s[1] ;}
+		        	else if (s = ua.match(/version\/([\d]+).*safari/)) {browser = 'Safari'+ s[1];}
+		        	else if (s = ua.match(/crios/)) {browser = 'Chrome'+ s[1];}
+		        	else if (s = ua.match(/mqqbrowser/)) {browser = 'QQ'+ s[1];}
+		       		else if (s = ua.match(/lbkit/)) {browser = 'Liebao'+ s[1];}
+		        	else if(s= ua.match(/ucbrowser/)){ browser = 'Uc' ;}
+		        	else if(s= ua.match(/micromessenger/)){ browser = 'WeiXin' ;}
+		        	else if(s= ua.match(/yixin/)){ browser = 'YiXin' ;}
+		        	else if(s= ua.match(/weibo/)){ browser = 'XinLang' ;}
+		        	else if(s= ua.match(/baiduboxapp/)){ browser = 'BaiDuApp' ;}
+		        	else{browser = "unknow";}
+		        	return browser;
+		        }
+		        if(s = ua.match(/msie ([\d]+)/)) {  browser = 'IE'+ s[1];}
+		        else if (ua.indexOf('Trident')>-1&&ua.indexOf('rv:11')>-1){  browser = 'IE11';}
+				else if (s = ua.match(/firefox\/([\d]+)/)) { browser = 'Firefox'+ s[1]; }
+		        else if (s = ua.match(/chrome\/([\d]+)/)) { browser = 'Chrome'+ s[1]; }
+		        else if (s = ua.match(/opera.([\d]+)/)) {  browser = 'Opera'+ s[1] ;}
+		        else if (s = ua.match(/version\/([\d]+).*safari/)) {browser = 'Safari'+ s[1];}
+				else  browser ="unknow";
+				return browser;
+			}
+
+			function getUserLanguage(){
+						var strResult ;	
+						var language = navigator.userLanguage;
+						if(language){
+							return language;
+						}else{
+							return  navigator.language.toLowerCase();
+						}		
+					}
+			function getSystemLanguage(){
+				var strResult ;	
+				var language = navigator.systemLanguage;
+				if(language){
+					return language;
+				}else{
+					return  navigator.language.toLowerCase();
+				}		
+			}
+			//-- Auto/Organic Sources and Keywords
+			var k_uOsr=new Array();
+			var k_uOkw=new Array();
+			k_uOsr[0]="google";	k_uOkw[0]="q";
+			k_uOsr[1]="yahoo";	k_uOkw[1]="p";
+			k_uOsr[2]="msn";		k_uOkw[2]="q";
+			k_uOsr[3]="aol";		k_uOkw[3]="query";
+			k_uOsr[4]="aol";		k_uOkw[4]="encquery";
+			k_uOsr[5]="lycos";	k_uOkw[5]="query";
+			k_uOsr[6]="ask";		k_uOkw[6]="q";
+			k_uOsr[7]="altavista";	k_uOkw[7]="q";
+			k_uOsr[8]="sogou";	k_uOkw[8]="query";
+			k_uOsr[9]="netscape";	k_uOkw[9]="s";
+			k_uOsr[10]="cnn";	k_uOkw[10]="query";
+			k_uOsr[11]="looksmart";	k_uOkw[11]="qt";
+			k_uOsr[12]="about";	k_uOkw[12]="terms";
+			k_uOsr[13]="mamma";	k_uOkw[13]="query";
+			k_uOsr[14]="alltheweb";	k_uOkw[14]="q";
+			k_uOsr[15]="gigablast";	k_uOkw[15]="q";
+			k_uOsr[16]="voila";	k_uOkw[16]="kw";
+			k_uOsr[17]="virgilio";	k_uOkw[17]="qs";
+			k_uOsr[18]="live";	k_uOkw[18]="q";
+			k_uOsr[19]="baidu";	k_uOkw[19]="wd";
+			k_uOsr[20]="alice";	k_uOkw[20]="qs";
+			//add by Strong
+			k_uOsr[21]="3721";	k_uOkw[21]="p";
+			k_uOsr[22]="iask";	k_uOkw[22]="k";
+			k_uOsr[23]="163";	k_uOkw[23]="q";
+			k_uOsr[24]="soso";	k_uOkw[24]="w";
+			k_uOsr[25]="search";	k_uOkw[25]="q";
+			k_uOsr[26]="baidu";	k_uOkw[26]="word";
+			k_uOsr[27]="roogoo"; k_uOkw[27]="q";
+			k_uOsr[28]="bing"; k_uOkw[28]="q";
+			k_uOsr[29]="youdao"; k_uOkw[29]="q";
+			k_uOsr[30]="35so"; k_uOkw[30]="queryString";
+			k_uOsr[31]="youdao"; k_uOkw[31]="lq";
+			k_uOsr[32]="jike"; k_uOkw[32]="q";
+			//linbaoji
+			k_uOsr[33]="360"; k_uOkw[33]="q";
+			k_uOsr[34]="so"; k_uOkw[34]="q";
+			k_uOsr[35]="yisou"; k_uOkw[35]="q";
+			k_uOsr[36]="ask"; k_uOkw[36]="q";
+			k_uOsr[37]="uc"; k_uOkw[37]="keyword";
+			k_uOsr[38]="sogou";	k_uOkw[38]="keyword";
+			//-- Auto/Organic Keywords to Ignore
+			var k_uOno=new Array();
+			//-- Referral domains to Ignore
+			var k_uRno=new Array();
+			function k_uEC(s) {
+			  var n="";
+			  if (!s || s=="") return "";
+			  for (var i=0;i<s.length;i++) {if (s.charAt(i)==" ") n+="+"; else n+=s.charAt(i);}
+			  return n;
+			}
+			function k_uOrg(t) {
+			 if (_ur=="0" || _ur=="" || _ur=="-") return "";
+			 if(_ur.indexOf("http://cpro.baidu.com")>=0){
+			 	return "";
+			 }
+			 if(_ur.indexOf('show.roogoo.com')>0)
+				 _ur=unescape(_ur);
+			 var i=0,h,k;
+			 if ((i=_ur.indexOf("://")) < 0) return "";
+			 h=_ur.substring(i+3,_ur.length);
+			 if (h.indexOf("/") > -1) {
+			  h=h.substring(0,h.indexOf("/"));
+			 }
+			 for (var ii=0;ii<k_uOsr.length;ii++) {
+			  if (h.toLowerCase().indexOf(k_uOsr[ii].toLowerCase()) > -1) {
+			   if ((i=_ur.indexOf("?"+k_uOkw[ii]+"=")) > -1 || (i=_ur.indexOf("&"+k_uOkw[ii]+"=")) > -1 || (i=_ur.indexOf("#"+k_uOkw[ii]+"=")) > -1) {
+				k=_ur.substring(i+k_uOkw[ii].length+2,_ur.length);
+				if ((i=k.indexOf("&")) > -1) k=k.substring(0,i);
+				for (var yy=0;yy<k_uOno.length;yy++) {
+				 if (k_uOno[yy].toLowerCase()==k.toLowerCase()) { _ufno=1; break; }
+				}
+				if (t) return k_uEC(k);
+				else return escape(k_uEC(k))+"&searchenger="+k_uEC(k_uOsr[ii]);
+			   }
+			  }
+			 }
+			 return "";
+			}
+
+			function get_keyword(url){
+				var encode = "UTF-8";
+				var keywords = "";
+				 var  _Enginers = new Array(
+					{name:/google\.com/,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/baidu\.com\//,encode:'utf8',keyWord:'wd',ie:'ie'},
+					{name:/yahoo\.com\//,encode:'utf8',keyWord:'p',ie:'ei'},
+					{name:/yisou\.com\//,encode:'utf8',keyWord:'search',ie:'ie'},
+					{name:/live\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/tom\.com\//,encode:'gbk',keyWord:'word',ie:'ie'},
+					{name:/163\.com\//,encode:'gbk',keyWord:'q',ie:'ie'},
+					{name:/iask\.com\//,encode:'gbk',keyWord:'k',ie:'ie'},
+					{name:/soso\.com\//,encode:'gbk',keyWord:'w',ie:'ie'},
+					{name:/sogou\.com\//,encode:'utf8',keyWord:'query',ie:'ie'},
+					{name:/zhongsou\.com\//,encode:'gbk',keyWord:'w',ie:'ie'},
+					{name:/3721\.com\//,encode:'gbk',keyWord:'p',ie:'ie'},
+					{name:/openfind\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/alltheweb\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/lycos\.com\//,encode:'utf8',keyWord:'query',ie:'ie'},
+					{name:/onseek\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/youdao\.com\//,encode:'utf8',keyWord:'q',ie:'ue'},
+					{name:/bing\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/118114\.com\//,encode:'gbk',keyWord:'kw',ie:'ie'},
+					{name:/35so\.com\//,encode:'utf8',keyWord:'queryString',ie:'ie'},
+					{name:/jike\.com\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/360\.cn\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/so\.con\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/yisou\.con\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/ask\.con\//,encode:'utf8',keyWord:'q',ie:'ie'},
+					{name:/uc\.cn\//,encode:'utf8',keyWord:'keyword',ie:'ie'}
+			);
+			if(url.match(/youdao\.com\//) && url.match(/search\?/)){
+				if( m = url.match(/(ue=)([\w-]*)/)){
+					return "&encode="+m[2]+"&host=" + fUrl(url);
+				}else if( m = url.match(/(ie=)([\w-]*)/)){ 
+					return "&encode="+m[2]+"&host=" + fUrl(url);
+				}else if(url.match(/keyfrom=dh\.win7000/)){
+					return "&encode=gbk&host=" + fUrl(url);
+				}else{
+				return "&encode=utf8&host=" + fUrl(url);
+				}
+			}
+			for(var i in _Enginers){
+				if(url.match(_Enginers[i].name)){   
+							if(matchA = url.match("("+_Enginers[i].ie+"=)([\\w-]*)")){
+							  encode = matchA[2];
+							}
+							else  encode=_Enginers[i].encode;
+							break;
+						}
+			}
+				return "&encode=" + encode + "&host=" + fUrl(url);
+			}
+			
+			function fUrl(str){
+				var strs = str;
+				if(strs!=''){
+					pos = strs.indexOf('\/',8);
+					strs = str.substr(7,pos-7);
+					return keC(strs); 
+				}else{
+					return keC('直接输入');
+				}
+			}
+			function keC(str){
+				return encodeURIComponent(str);
+			}
+			function dF(s){var s1=unescape(s.substr(0,s.length-1)); var t='';for(i=0;i<s1.length;i++)t+=String.fromCharCode(s1.charCodeAt(i)-s.substr(s.length-1,1));document.write(unescape(t));}
+			function _do_save_track(){
+			var cook = navigator['cookieEnabled'];
+			var pform = getOS();
+			var syslan = getSystemLanguage();
+			var userlan = getUserLanguage();
+			var appName = getBrowser();
+			var appV = navigator['appVersion'].substring(0,3);
+			var cpu = navigator.cpuClass;
+			_ur=this_referr;
+			var key = k_uOrg(false);
+			var key_words = key+get_keyword(_ur);
+			var this_referr2 = this_referr;
+			var Kimg = new Image();
+			Kimg.onload= new function (){window.status = "saved track";};
+			Kimg.src=xml_path+ '/saveTrackAction.do?client_id='+client_id+'&src_type=2&account_id='+kacct+'&key_words='+key_words+'&url='+keC(this_url)+'&cook='+cook+'&pform='+keC(pform)+'&syslan='+syslan+'&userlan='+userlan+'&appName='+keC(appName)+'&appV='+appV+'&cpu='+cpu+'&referr='+keC(this_referr2)+'&title='+keC(this_title)+"&.rnd="+Math.random();
+			}
+
+			setTimeout('new_init()',10);

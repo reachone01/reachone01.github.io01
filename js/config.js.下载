@@ -1,0 +1,75 @@
+var newCssPath=cssPath.substring(0,cssPath.length-1);
+require.config({
+    baseUrl : jsPath+"js/lib/",
+    urlArgs : "v=ud_1585387108566",
+    shim : {
+        backbone : {
+            deps : [ 'underscore', 'jquery' ],
+            exports : 'Backbone'
+        },
+        underscore : {
+            exports : '_'
+        },
+        jqueryui: {
+            deps: ['jquery','css!csspath/css/jquery-ui.min.css']
+        },
+        Minicolors: {
+            deps: ['jquery','css!csspath/css/jquery.minicolors.css']
+        },
+        artDialog : {
+            deps : ['jquery','artDialog/plugins/iframeTools','css!artDialog/skins/black.css']
+        },
+        columnScroll: {
+            deps: ['jquery']
+        },
+        SuperSlide: {
+            deps: ['jquery']
+        },
+        fancyJs:{
+            deps:["jquery","fancybox/jquery.mousewheel.pack","css!csspath/css/jquery.fancybox-thumbs.css","css!csspath/css/jquery.fancybox.css"]
+        },
+        imagefit: {
+            deps: ['jquery']
+        },
+        jquerylazyload: {
+            deps: ['jquery']
+        },
+        webupload: {
+            deps: ['jquery']
+        },
+        BMap: {
+            deps: ['jquery'],
+            exports: 'BMap'
+        },
+        "Vue":{
+            exports: "Vue"
+        },
+        "axios":{
+            exports: "axios"
+        }
+    },
+    paths : {
+        app : jsPath+"website/",
+        jquery : ["jquery_qt"],
+        backbone : ["backbone"],
+        jqueryui:["jqueryui"],
+        Minicolors: ["jquery.minicolors"],
+        public : [jsPath+"js/public"],
+        csspath : [newCssPath],
+        jspath : [jsPath+"js/lib/"],
+        columnScroll: ["columnScroll/columnScroll"],
+        SuperSlide: ["SuperSlide/SuperSlide"],
+        fancyJs:["fancybox/jquery.fancybox.pack"],
+        imagefit:["imagefit"],
+        jquerylazyload:["jquerylazyload"],
+        webupload: ["webuploader/webuploader.min"],
+        BMap: ["//api.map.baidu.com/api?v=2.0&ak=P9c7lyUVQyP4yR2UtRRIwYinxCpKNDWp"],
+        async: "async",
+        Vue:"vue.min",
+        axios:"axios.min"
+    },
+    waitSeconds: 0
+});
+require(["imagefit"]);
+require(["SuperSlide"]);
+require(["jquerylazyload"]);

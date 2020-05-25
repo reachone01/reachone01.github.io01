@@ -1,0 +1,906 @@
+var memberUrl = "https://webmember.iyong.com/"
+if ($("#mem_load_login").attr("src")) {
+	if ($("#mem_load_login").attr("src").indexOf("webmember-cs") != -1) {
+		memberUrl = "https://webmember-cs.kenfor.com/"
+	} else if ($("#mem_load_login").attr("src").indexOf("webmember-fb") != -1) {
+		memberUrl = "https://webmember-fb.kenfor.com/"
+	}
+}
+
+var global_webmember_mid;
+if (window.memberId_center && window.memberId_center.mid) {
+	global_webmember_mid = memberId_center.mid;
+}
+
+var initGlobalWebmemberMid = function(param_mid) {
+	global_webmember_mid = param_mid;
+}
+
+var link = document.createElement('link');
+link.rel = "stylesheet";
+link.type = 'text/css';
+link.href = memberUrl + 'cst/css/login.cr.css';
+document.getElementsByTagName("head")[0].appendChild(link);
+
+var appUtil = (function() {
+	// 获取登录token
+	var load_token = function() {
+		$.ajax({
+			type: "get",
+			async: false,
+			url: memberUrl + 'account/getLoginToken.do?mid=' + global_webmember_mid,
+			dataType: "jsonp",
+			jsonp: "callback", //传递给请求处理程序或页面的，用以获得jsonp回调函数名的参数名(一般默认为:callback)
+			jsonpCallback: "jsonpscall", //自定义的jsonp回调函数名称，默认为jQuery自动生成的随机函数名，也可以写"?"，jQuery会自动为你处理数据
+			success: function(jsons) {
+				if (jsons.token && jsons.token != "null") {
+					addCookie("mtoken", jsons.token, jsons.tokenDeadline);
+					sessionStorage.mtoken = jsons.token;
+				}
+			}
+		});
+
+		function addCookie(objName, objValue, deadline, path) { //添加cookie
+			var str = objName + "=" + escape(objValue);
+			var date = new Date(deadline);
+			var dateNow = new Date();
+			if (dateNow.getTime() < date.getTime()) {
+				str += "; expires=" + date.toGMTString();
+				if (!path) {
+					str += ';path=/';
+				}
+				document.cookie = str;
+			}
+		}
+
+		function getCookie(name) {
+			var arr, reg = new RegExp("(^| )" + name + "=([^;]*)(;|$)");
+			if (arr = document.cookie.match(reg)) {
+				return unescape(arr[2]);
+			} else {
+				return "";
+			}
+		}
+	};
+
+	var getColor = function() {
+		var result = "78cbff";
+		var params = {
+			"mid": global_webmember_mid
+		};
+		var mcParams = {};
+		mcParams.apicode = "selectColorSet";
+		mcParams.syscode = "membership";
+		mcParams.params = JSON.stringify(params);
+		$.ajax({
+			url: memberUrl + 'w/thirdSys/commonThirdRpc.do',
+			type: 'POST',
+			xhrFields: {
+				withCredentials: true
+			},
+			async: false,
+			data: mcParams,
+			success: function(resultData) {
+				if (resultData.result == 'SUCCESS') {
+					result = resultData.data.mColor;
+				}
+			}
+		});
+		return result;
+	};
+
+	// website_body:插件加载位置, isPhone:手机端, returnPageUrl:登录回调地址(仅登录有效), isBackPage:是否保留前置页面, isWebsite:是否网站
+	var fn = function(website_body, isPhone, returnPageUrl, isBackPage, isWebsite) {
+		var mColor = getColor();
+		$(".login_logo_cr").remove();
+		// 登录图标
+		var loginDiv = '';
+		loginDiv += '<div class="login_logo_cr">';
+		loginDiv += '	<i class="iconfont_login_cr load_login" id="load_login">&#xe753;</i>';
+		loginDiv += '</div>';
+		$(website_body).append(loginDiv);
+		// 登录状态获取
+		if (check_login_mb()) {
+			$(".load_login").css("color", "#" + mColor);
+			$(".load_login").css("border-color", "#" + mColor);
+		} else {
+			$(".load_login").css("color", "#8d8d8d");
+			$(".load_login").css("border-color", "#8d8d8d");
+		}
+		// 是否手机端
+		if (isPhone == "phone" || (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i))) {
+			$(".load_login").addClass("load_login_phone");
+			$(".login_logo_cr").addClass("login_logo_phone_cr");
+		}
+		// 跳转会员
+		$("#load_login").click(function() {
+			checked_to_where("index", null, returnPageUrl, isBackPage, isWebsite);
+		})
+	};
+
+	// 登录状态获取
+	var check_login_mb = function() {
+		var login_status;
+		$.ajax({
+			url: memberUrl + 'account/getLoginInfo.do',
+			xhrFields: {
+				withCredentials: true
+			},
+			crossDomain: true,
+			async: false,
+			type: 'POST',
+			data: {
+				mid: global_webmember_mid
+			},
+			success: function(res) {
+				if (res.result == "SUCCESS" && res.data.status == "1") {
+					login_status = true;
+				} else {
+					login_status = false;
+				}
+			}
+		})
+		return login_status;
+	};
+
+	// 校验登录及跳转, to_url:跳转场景, zj_phone:组件手机号(仅注册有效), returnPageUrl:登录回调地址(仅登录有效) isBackPage:是否保留前置页面, isWebsite:是否网站
+	var checked_to_where = function(to_url, zj_phone, returnPageUrl, isBackPage, isWebsite) {
+		var url = memberUrl + '/cst/transfer.html?mid=' + global_webmember_mid;
+		if (returnPageUrl) {
+			url += "&returnPage=" + encodeURIComponent(returnPageUrl);
+		}
+		if (isBackPage == false || isBackPage == 0) {} else {
+			url += '&href=' + encodeURIComponent(location.href);
+		}
+		if (isWebsite == false || isWebsite == 0) {} else {
+			url += '&host=' + location.origin
+		}
+		$.ajax({
+			url: memberUrl + 'account/getLoginInfo.do',
+			xhrFields: {
+				withCredentials: true
+			},
+			crossDomain: true,
+			type: 'POST',
+			data: {
+				mid: global_webmember_mid
+			},
+			success: function(res) {
+				if (res.result == "SUCCESS" && res.data.status == "1") {
+					url = url + '&to=' + to_url + "&membershipAccountId=" + res.data.customer.customerId + "&mtoken=" + res.data.mtoken;
+				} else {
+					url = url + '&to=' + to_url;
+					if (to_url == "register" && zj_phone) {
+						url = url + '&zjphone=' + zj_phone;
+					}
+				}
+				window.location = url;
+			}
+		});
+	};
+
+	return {
+		load_token: load_token,
+		getColor: getColor,
+		fn: fn,
+		check_login_mb: check_login_mb,
+		checked_to_where: checked_to_where
+	}
+})();
+
+//---------------------------------js sdk------------------------------
+var iyongwebmember = {
+	/**
+	 *校验会员是否登录
+	 * @param jsonstr {"mid":777}
+	 */
+	checkLogin: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		if (!data.mid) {
+			result.status = -1;
+			defer.resolve(result);
+		} else {
+			$.ajax({
+				url: memberUrl + '/account/getLoginInfo.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: data,
+				success: function(resultData) {
+					if (resultData.data.status == 1) {
+						result.status = 1;
+					} else {
+						result.status = 0;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 *获取会员登录信息
+	 *  @param  jsonstr {"mid":777}
+	 */
+	getLoginInfo: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		result.lableInfoList = [];
+		if (!data.mid) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			$.ajax({
+				url: memberUrl + '/account/getLoginInfo.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: data,
+				success: function(resultData) {
+					if (resultData.data.status == 1) {
+						var customer = resultData.data.customer;
+						result.accountId = customer.accountId;
+						result.mid = customer.mid;
+						result.cstacc = customer.cstacc;
+						result.csthi = customer.csthi;
+
+						var accountIdList = [];
+						accountIdList.push(customer.accountId);
+						data.accountIdList = accountIdList;
+
+						//获取标签信息
+						var mcParams = {};
+						mcParams.apicode = "getLabelInfo";
+						mcParams.syscode = "membership";
+						mcParams.params = JSON.stringify(data);
+						$.ajax({
+							url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+							type: 'POST',
+							xhrFields: {
+								withCredentials: true
+							},
+							data: mcParams,
+							success: function(resultData) {
+								if (resultData.result == 'SUCCESS') {
+									if (resultData.data.length && resultData.data[0]) {
+										result.lableInfoList = resultData.data[0].lableInfoList;
+									} else {
+										result.lableInfoList = [];
+									}
+									result.status = 1;
+									result.errorMsg = "";
+									defer.resolve(result);
+								} else {
+									result.lableInfoList = [];
+									result.status = -2;
+									result.errorMsg = resultData.errorMsg.errorMsg;
+									defer.resolve(result);
+								}
+							}
+						});
+					} else {
+						result.status = 0;
+						result.errorMsg = "获取用户信息失败"
+						defer.resolve(result);
+					}
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 *退出登录
+	 * @param jsonstr {"mid":777, "endUrl":"https://......"}
+	 */
+	logout: function(jsonstr) {
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		data.mid = json.mid;
+		$.ajax({
+			url: memberUrl + '/w/cst/logout.do',
+			type: 'POST',
+			xhrFields: {
+				withCredentials: true
+			},
+			data: data,
+			success: function(resultData) {
+				if (json.endUrl) {
+					window.location = json.endUrl;
+				} else {
+					appUtil.checked_to_where("login");
+				}
+			}
+		});
+	},
+	//---------------------------------电商-----------------------------
+	/**
+	 * 展示购物车列表
+	 * @param jsonstr {"mid":777}
+	 * 成功返回1 失败返回错误信息
+	 */
+	listCart: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		result.data = [];
+		if (!data.mid) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "listCart";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + 'w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						var data = resultData.data;
+						result.status = 1;
+						result.data = data;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 删除购物车记录
+	 * @param jsonstr {"mid":"777","cartIdList":["1","2"]}
+	 * 成功返回1 失败返回错误信息
+	 */
+	deleteCart: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.cartIdList = json.cartIdList;
+		if (!(data.mid && data.cartIdList && data.cartIdList.length)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "delCart";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + 'w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 加入购物车
+	 * @param jsonstr {"mid":777,"productId":1,"skuDetailId":2,"productCount":"1"}
+	 * 成功返回1 失败返回错误信息
+	 */
+	addCart: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.productId = json.productId;
+		data.skuDetailId = json.skuDetailId;
+		data.productCount = json.productCount;
+		if (!(data.mid && data.productId && data.productCount)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "addCart";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + 'w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 添加商品收藏
+	 * @param json {"mid":777,"productId":1}
+	 * 成功返回1 失败返回错误信息
+	 */
+	saveCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.productId = json.productId;
+		if (!(data.mid && data.productId)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "saveCollection";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 取消商品收藏
+	 * @param json {"mid":777,"productId":1}
+	 * 成功返回1 失败返回错误信息
+	 */
+	delCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.productId = json.productId;
+		if (!(data.mid && data.productId)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "delCollection";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 单个商品是否被收藏
+	 * @param json {"mid":777,"productId":1}
+	 * 商品被收藏返回1 商品未被收藏返回2 失败返回错误信息
+	 */
+	checkCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		var productIdList = [];
+		productIdList.push(json.productId);
+		data.productIdList = productIdList;
+		data.pageIndex = 1;
+		data.pageMax = 1;
+		if (!(data.mid && data.productIdList && data.productIdList.length)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "listCollection";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				data: mcParams,
+				xhrFields: {
+					withCredentials: true
+				},
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						if (resultData.data.pageNum > 0) {
+							result.status = 1;
+						} else {
+							result.status = 2;
+						}
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 获取商品收藏列表
+	 * @param jsonstr{"mid":"777","pageIndex":"1","pageMax":"5","productIdList":["1","2"]}
+	 */
+	listCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.productIdList = json.productIdList;
+		data.pageIndex = json.pageIndex;
+		data.pageMax = json.pageMax;
+		result.data = [];
+		if (!(data.mid && data.productIdList && data.productIdList.length && data.pageIndex && data.pageMax)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "listCollection";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						if (resultData.data.pageNum > 0) {
+							result.status = 1;
+							result.data = resultData.data
+						} else {
+							result.status = 2;
+						}
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 获取购物车产品数量
+	 * @param jsonstr {"mid":777}
+	 */
+	getCartCount: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		if (!data.mid) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "infoCartCount";
+			mcParams.syscode = "ecommerce";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.data = resultData.data;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登入") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	//---------------------------博客--------------------------
+	/**
+	 * 获取文章收藏列表
+	 * @param jsonstr {"mid":"777","pageIndex":"1","pageMax":"5","articleIdList":["1"]}
+	 */
+	listArticleCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.articleIdList = json.articleIdList;
+		data.pageIndex = json.pageIndex;
+		data.pageMax = json.pageMax;
+		result.data = [];
+		if (!(data.mid && data.articleIdList && data.articleIdList.length && data.pageIndex && data.pageMax)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "listArticleCollection";
+			mcParams.syscode = "blog";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						if (resultData.data.pageNum > 0) {
+							result.status = 1;
+							result.data = resultData.data
+						} else {
+							result.status = 2;
+						}
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 单个博客文章是否被收藏
+	 * @param jsonstr {"mid":777,"articleId":1}
+	 * 文章被收藏时返回1 未被收藏时返回2,错误时返回错误信息
+	 */
+	checkArticleCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		var articleIdList = [];
+		articleIdList.push(json.articleId);
+		data.articleIdList = articleIdList;
+		data.pageIndex = 1;
+		data.pageMax = 1;
+		if (!(data.mid && data.articleIdList && data.articleIdList.length)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "listArticleCollection";
+			mcParams.syscode = "blog";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						if (resultData.data.pageNum > 0) {
+							result.status = 1;
+						} else {
+							result.status = 2;
+						}
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						result.status = 0;
+						result.errorMsg = "未登录";
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 取消收藏
+	 * @param jsonstr {"mid":777,"articleId":1}
+	 * 成功返回1 失败返回错误信息
+	 */
+	deleteArticleCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.articleId = json.articleId;
+		if (!(data.mid && data.articleId)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "deleteArticleCollection";
+			mcParams.syscode = "blog";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	},
+	/**
+	 * 保存文章收藏记录
+	 * @param jsonstr {"mid":777,"articleId":1}
+	 * 成功返回1 失败返回错误信息
+	 */
+	saveArticleCollection: function(jsonstr) {
+		var defer = $.Deferred();
+		var json = $.parseJSON(jsonstr);
+		var data = {};
+		var result = {};
+		data.mid = json.mid;
+		data.articleId = json.articleId;
+		if (!(data.mid && data.articleId)) {
+			result.status = -1;
+			result.errorMsg = "参数错误";
+			defer.resolve(result);
+		} else {
+			var params = data;
+			var mcParams = {};
+			mcParams.apicode = "saveArticleCollection";
+			mcParams.syscode = "blog";
+			mcParams.params = JSON.stringify(params);
+			$.ajax({
+				url: memberUrl + '/w/thirdSys/commonThirdRpc.do',
+				type: 'POST',
+				xhrFields: {
+					withCredentials: true
+				},
+				data: mcParams,
+				success: function(resultData) {
+					if (resultData.result == 'SUCCESS') {
+						result.status = 1;
+						result.errorMsg = "";
+					} else if (resultData.errorMsg.errorMsg.search("未登录") != -1) {
+						appUtil.checked_to_where("login", null, window.location.href, false, false);
+					} else {
+						result.status = -2;
+						result.errorMsg = resultData.errorMsg.errorMsg;
+					}
+					defer.resolve(result);
+				}
+			});
+		}
+		return defer.promise();
+	}
+};
